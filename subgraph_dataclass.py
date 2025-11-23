@@ -1,0 +1,167 @@
+# dataset class for subgraphs
+import torch
+from torch_geometric.data import Data
+
+import numpy as np
+import pandas as pd
+import torch_geometric
+
+from torch.utils.data import Dataset, DataLoader
+from torch_geometric.data import Data
+from torch_geometric.utils import k_hop_subgraph, to_undirected 
+from torch_geometric.nn import GCNConv, GATConv, global_mean_pool
+
+from datetime import datetime
+from collections import deque, defaultdict
+from collections.abc import Sequence
+
+# EdgeList with columns ['src', 'dst', 'timestamp']
+type EdgeList = pd.DataFrame
+
+
+class LinkSubgraphDataset(Dataset):
+    def __init__(self, 
+                 pos_edge_sample: EdgeList,
+                 neg_edge_sample: EdgeList,
+                 full_edge_data: pd.DataFrame,
+                 graph_features: torch_geometric.data.Data,
+                 hops = 1):
+
+        self.pos_edges = pos_edge_sample
+        self.neg_edges = neg_edge_sample
+        self.full_edge_data = full_edge_data
+        self.hops = hops
+        self.graph_features = graph_features
+
+
+        self.sample_edges = pd.concat([pos_edge_sample, neg_edge_sample], axis=0)
+        self.labels = np.concatenate([
+            np.ones(pos_edge_sample.shape[0], dtype=np.int64),
+            np.zeros(neg_edge_sample.shape[0], dtype=np.int64)
+        ], axis=0)
+
+    def __len__(self):
+        return self.edges.shape[0]
+
+    def __getitem__(self, idx):
+        '''
+        return a single sample to be passed into the network.
+        '''
+        # 
+
+        u, v = self.edges[idx]
+        y = self.labels[idx]
+
+        subgraph_nodes, subgraph_edges = self.extract_enclosing_subgraph(idx)
+
+        return subgraph_nodes, subgraph_edges, torch.tensor(y, dtype=torch.float)
+    
+    def drnl_labeling(sub_nodes, u_idx, v_idx, edge_index):
+        '''
+        Double-radius node labeling (DRNL) algorithm.
+        '''
+        node_id_to_pos = {int(n): i for i, n in enumerate(sub_nodes.tolist())}
+        num_sub_nodes = sub_nodes.size(0)
+    
+        ##Building adjacency list for subgraph
+        adj = [[] for _ in range(num_sub_nodes)]
+        ei = edge_index
+        mask = torch.isin(ei[0], sub_nodes) & torch.isin(ei[1], sub_nodes)
+        sub_e0 = ei[0][mask]
+        sub_e1 = ei[1][mask]
+
+        for a, b in zip(sub_e0.tolist(), sub_e1.tolist()):
+            ia = node_id_to_pos[a]
+            ib = node_id_to_pos[b]
+            adj[ia].append(ib)
+            adj[ib].append(ia)
+
+        def bfs_dist(start_pos):
+            dist = [float('inf')] * num_sub_nodes
+            q = deque()
+            dist[start_pos] = 0
+            q.append(start_pos)
+            while q:
+                cur = q.popleft()
+                for nb in adj[cur]:
+                    if dist[nb] == float('inf'):
+                        dist[nb] = dist[cur] + 1
+                        q.append(nb)
+            return dist
+
+        u_pos = node_id_to_pos[int(u_idx)]
+        v_pos = node_id_to_pos[int(v_idx)]
+
+        du_list = bfs_dist(u_pos)
+        dv_list = bfs_dist(v_pos)
+
+        du = torch.tensor(du_list, dtype=torch.float)
+        dv = torch.tensor(dv_list, dtype=torch.float)
+
+        big = 1e6
+        du[torch.isinf(du)] = big
+        dv[torch.isinf(dv)] = big
+
+        du = du.long()
+        dv = dv.long()
+
+        dist_sum = du + dv
+        dist_min = torch.min(du, dv)
+        dist_sum_half = dist_sum // 2
+
+        labels = 1 + dist_min + dist_sum_half * (dist_sum_half + 1)
+
+        u_pos_t = torch.tensor(u_pos, dtype=torch.long)
+        v_pos_t = torch.tensor(v_pos, dtype=torch.long)
+        labels[u_pos_t] = 1
+        labels[v_pos_t] = 1
+
+        return labels
+    
+    def extract_enclosing_subgraph(self, idx):
+        '''
+        Extract the enclosing subgraph of a given edge.
+        Only consider edges with earlier timestamps.
+        '''
+        curr_edge = self.edges.iloc[idx]
+        current_timestamp = curr_edge['timestamp']
+        src = curr_edge['src']
+        dst = curr_edge['dst']
+        
+        # subset to edges with earlier timestamps
+        # NOTE this prevents the edge to be predicited from appearing in the induced subgraph. 
+        edge_history = self.full_edge_data[self.full_edge_data['timestamp'] < current_timestamp]
+
+        #create tensor of the historical indicies
+        src_history = torch.tensor(edge_history['src'].to_numpy(), dtype=torch.long)
+        dst_history = torch.tensor(edge_history['dst'].to_numpy(), dtype=torch.long)
+        edge_history = to_undirected(torch.stack([src_history, dst_history], dim=0))
+
+        # extract enclosing subgraph
+        
+        center_nodes = torch.tensor([src, dst], dtype=torch.long)
+        node_idx, sub_edge_index, node_mapping, edge_mask  = k_hop_subgraph(node_idx=center_nodes,
+                                                                            num_hops=self.hops,
+                                                                            edge_index=edge_history,
+                                                                            relabel_nodes=True,
+                                                                            directed=False)
+        
+        
+        
+
+        
+        drnl_labels = self.drnl_labeling(node_idx, src, dst, sub_edge_index)
+
+        x_sub = self.graph_features.x[node_idx]
+        labels_norm = drnl_labels.view(-1, 1).float()
+        x_with_labels = torch.cat([x_sub, labels_norm], dim=1)
+
+        batch = torch.zeros(x_with_labels.size(0), dtype=torch.long)
+        return x_with_labels, sub_edge_index
+
+    
+
+        pass
+
+
+
