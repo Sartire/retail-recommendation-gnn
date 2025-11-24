@@ -22,8 +22,7 @@ module load apptainer/1.3.4
 module load python/3.11.4
 module load pytorch/2.7.0
 
-pip install torch
-pip install torch_geometric
+pip install -r requirements.txt > /dev/null
 
 echo '--------------------------------------------------------------------------------'
 echo 'Starting script...'
