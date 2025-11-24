@@ -16,13 +16,13 @@ from collections import deque, defaultdict
 from collections.abc import Sequence
 
 # EdgeList with columns ['user_idx', 'item_idx', 'timestamp']
-type EdgeList = pd.DataFrame
+#type EdgeList = pd.DataFrame
 
 
 class LinkSubgraphDataset(Dataset):
     def __init__(self, 
-                 pos_edge_sample: EdgeList,
-                 neg_edge_sample: EdgeList,
+                 pos_edge_sample: pd.DataFrame,
+                 neg_edge_sample: pd.DataFrame,
                  full_edge_data: pd.DataFrame,
                  graph_features: torch_geometric.data.Data,
                  hops = 1):
