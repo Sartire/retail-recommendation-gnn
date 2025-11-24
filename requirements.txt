@@ -4,7 +4,3 @@ torch
 torch_geometric
 kagglehub
 tdqm
-torch-scatter 
-torch-sparse 
-torch-cluster 
-torch-spline-conv
