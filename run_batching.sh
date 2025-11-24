@@ -11,7 +11,7 @@
 #SBATCH --mail-type=ALL
 #SBATCH --constraint=rivanna   # cluster
 #SBATCH --account=shakeri_ds6050   # allocation name
-#SBATCH --mem=6G
+#SBATCH --mem=15G
 
 cd /scratch/mcg4aw/retail-recommendation-gnn
 
@@ -23,6 +23,10 @@ module load python/3.11.4
 module load pytorch/2.7.0
 
 pip install -r requirements.txt > /dev/null
+
+
+
+export LD_LIBRARY_PATH=/home/mcg4aw/.local/lib:$LD_LIBRARY_PATH
 
 echo '--------------------------------------------------------------------------------'
 echo 'Starting script...'
