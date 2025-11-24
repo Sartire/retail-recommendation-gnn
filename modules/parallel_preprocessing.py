@@ -1,10 +1,8 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
-import pickle
 from pathlib import Path
 from tqdm import tqdm
 from multiprocessing import Pool, cpu_count
-import os
 
 from subgraph_dataclass import LinkSubgraphDataset
 from retail_data_prep import preprocess_events, create_graph_features
