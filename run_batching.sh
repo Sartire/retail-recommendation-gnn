@@ -22,6 +22,11 @@ module load apptainer/1.3.4
 module load python/3.11.4
 module load pytorch/2.7.0
 
+pip install torch
 pip install torch_geometric
+
+echo '--------------------------------------------------------------------------------'
+echo 'Starting script...'
+echo '--------------------------------------------------------------------------------'
 
 python preprocess_batches.py --num_workers 10
