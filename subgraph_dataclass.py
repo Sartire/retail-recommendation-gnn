@@ -15,7 +15,7 @@ from datetime import datetime
 from collections import deque, defaultdict
 from collections.abc import Sequence
 
-# EdgeList with columns ['src', 'dst', 'timestamp']
+# EdgeList with columns ['user_idx', 'item_idx', 'timestamp']
 type EdgeList = pd.DataFrame
 
 
@@ -41,22 +41,20 @@ class LinkSubgraphDataset(Dataset):
         ], axis=0)
 
     def __len__(self):
-        return self.edges.shape[0]
+        return self.sample_edges.shape[0]
 
     def __getitem__(self, idx):
         '''
         return a single sample to be passed into the network.
         '''
         # 
-
-        u, v = self.edges[idx]
         y = self.labels[idx]
 
         subgraph_nodes, subgraph_edges = self.extract_enclosing_subgraph(idx)
 
         return subgraph_nodes, subgraph_edges, torch.tensor(y, dtype=torch.float)
     
-    def drnl_labeling(sub_nodes, u_idx, v_idx, edge_index):
+    def drnl_labeling(self, sub_nodes, u_idx, v_idx, edge_index):
         '''
         Double-radius node labeling (DRNL) algorithm.
         Label based on distances to nodes in the enclosing subgraph.
@@ -124,29 +122,31 @@ class LinkSubgraphDataset(Dataset):
         Extract the enclosing subgraph of a given edge.
         Only consider edges with earlier timestamps.
         '''
-        curr_edge = self.edges.iloc[idx]
+        curr_edge = self.sample_edges.iloc[idx]
         current_timestamp = curr_edge['timestamp']
-        src = curr_edge['src']
-        dst = curr_edge['dst']
+        src = curr_edge['user_idx']
+        dst = curr_edge['item_idx']
         
         # subset to edges with earlier timestamps
         # NOTE this prevents the edge to be predicited from appearing in the induced subgraph. 
         edge_history = self.full_edge_data[self.full_edge_data['timestamp'] < current_timestamp]
 
         #create tensor of the historical indicies
-        src_history = torch.tensor(edge_history['src'].to_numpy(), dtype=torch.long)
-        dst_history = torch.tensor(edge_history['dst'].to_numpy(), dtype=torch.long)
+        # add self edges to prevent the anchor nodes from being out of bounds
+
+        src_history = torch.tensor(np.concatenate([[src], [dst], edge_history['user_idx'].to_numpy()]), dtype=torch.long)
+        dst_history = torch.tensor(np.concatenate([[src], [dst], edge_history['item_idx'].to_numpy()]), dtype=torch.long)
         edge_history = to_undirected(torch.stack([src_history, dst_history], dim=0))
 
         # extract enclosing subgraph
         
         center_nodes = torch.tensor([src, dst], dtype=torch.long)
+
         node_idx, sub_edge_index, node_mapping, edge_mask  = k_hop_subgraph(node_idx=center_nodes,
                                                                             num_hops=self.hops,
                                                                             edge_index=edge_history,
                                                                             relabel_nodes=True,
                                                                             directed=False)
-        
         
         
 

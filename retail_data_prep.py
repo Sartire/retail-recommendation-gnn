@@ -77,7 +77,7 @@ def unix_to_datetime(timestamp):
 
 
 
-def preprocess_events(events, min_user_interactions = 5, min_item_interactions = 10, limit = None):
+def preprocess_events(min_user_interactions = 5, min_item_interactions = 10, limit = None):
     events = download_events(limit)
     events = apply_activity_threshold(events, min_user_interactions, min_item_interactions)
     events['datetime'] = [unix_to_datetime(timestamp) for timestamp in events['timestamp']]
