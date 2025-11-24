@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
 
+import torch
+from torch_geometric.data import Data
 
 
 def download_events( limit = None):
@@ -34,7 +36,6 @@ def download_events( limit = None):
 def apply_activity_threshold(events, min_user_interactions = 5, min_item_interactions = 10):
     '''
     Filter out users and items that have less than min_user_interactions and min_item_interactions
-    Reindex them
     '''
     user_counts = events['visitorid'].value_counts()
     item_counts = events['itemid'].value_counts()
@@ -50,18 +51,10 @@ def apply_activity_threshold(events, min_user_interactions = 5, min_item_interac
         events['itemid'].isin(active_items)
     ].copy()
 
-    events = events_filtered.reset_index(drop=True)
+    return events_filtered.reset_index(drop=True)
 
-    unique_users = events['visitorid'].unique()
-    unique_items = events['itemid'].unique()
 
-    user_to_idx = {u: i for i, u in enumerate(unique_users)}
-    item_to_idx = {it: idx + len(unique_users) for idx, it in enumerate(unique_items)}
 
-    events['user_idx'] = events['visitorid'].map(user_to_idx)
-    events['item_idx'] = events['itemid'].map(item_to_idx)
-
-    return events
 
 def unix_to_datetime(timestamp):
     try:
@@ -80,8 +73,46 @@ def unix_to_datetime(timestamp):
 def preprocess_events(min_user_interactions = 5, min_item_interactions = 10, limit = None):
     events = download_events(limit)
     events = apply_activity_threshold(events, min_user_interactions, min_item_interactions)
+    #events = reindex_nodes(events) don't need to do this until splitting 
     events['datetime'] = [unix_to_datetime(timestamp) for timestamp in events['timestamp']]
     events['month'] = events['datetime'].dt.month
     events['date'] = events['datetime'].dt.date
     events = events.sort_values('datetime').reset_index(drop=True)
     return events
+
+
+def create_graph_features(events, use_edge_weights = True):
+    
+
+    event_weight_map = {
+        'view': 1.0,
+        'addtocart': 2.0,
+        'transaction': 3.0
+    }
+
+    unique_users = len(events['visitorid'].unique())
+    unique_items = len(events['itemid'].unique())
+    num_nodes = unique_items + unique_users
+
+    if use_edge_weights:
+        events['weight'] = events['event'].map(event_weight_map).fillna(1.0)
+    else:
+        events['weight'] = 1.0
+
+    edge_src = torch.tensor(events['user_idx'].values, dtype=torch.long)
+    edge_dst = torch.tensor(events['item_idx'].values, dtype=torch.long)
+    edge_index = torch.stack([edge_src, edge_dst], dim=0)
+    edge_weight = torch.tensor(events['weight'].values, dtype=torch.float)
+
+    deg = torch.zeros(num_nodes, dtype=torch.float)
+    #deg.index_add_(0, edge_src, torch.ones_like(edge_src, dtype=torch.float))
+    #deg.index_add_(0, edge_dst, torch.ones_like(edge_dst, dtype=torch.float))
+
+    graph_summary_data = Data(
+        edge_index=edge_index,
+        edge_weight=edge_weight,
+        x=deg.view(-1, 1),
+        num_nodes=num_nodes
+    )
+
+    return graph_summary_data
