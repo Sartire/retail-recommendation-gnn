@@ -1,0 +1,6 @@
+numpy
+pandas
+torch
+torch_geometric
+kagglehub
+tdqm
