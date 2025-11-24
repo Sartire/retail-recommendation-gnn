@@ -68,11 +68,13 @@ def preprocess_dataset_parallel(dataset, cache_dir, num_workers=None):
     
     # Process in parallel with progress bar
     with Pool(num_workers) as pool:
-        list(tqdm(
+        list(
+            #tqdm(
             pool.imap(preprocess_single_item, args_list),
-            total=len(dataset),
-            desc="Preprocessing"
-        ))
+            #total=len(dataset),
+            #desc="Preprocessing"
+        #)
+        )
     
     print(f"Preprocessing complete! Data saved to {cache_dir}")
 
