@@ -1,12 +1,23 @@
 #!/bin/bash
 
-#SBATCH --ntasks=1  
-#SBATCH --cpus-per-task=20         
-#SBATCH --mem-per-cpu=6000            
-#SBATCH --time=01:00:00   
-#SBATCH --chdir=/scratch/mcg4aw/retail-recommendation-gnn
-#SBATCH --mail-user=mcg4aw@virginia.edu
+
+#SBATCH --time=1:00:00   # job time limit
+#SBATCH --nodes=1   # number of nodes
+#SBATCH --ntasks-per-node=1   # number of tasks per node
+#SBATCH --cpus-per-task=20   # number of CPU cores per task
+#SBATCH --partition=standard   # partition
+#SBATCH -J "CreateRetailBatches"   # job name
+#SBATCH --mail-user=mcg4aw@virginia.edu   # email address
 #SBATCH --mail-type=ALL
+#SBATCH --constraint=rivanna   # cluster
+#SBATCH --account=shakeri_ds6050   # allocation name
 
+cd /scratch/mcg4aw/retail-recommendation-gnn
 
-python preprocess_batches.py $SLURM_CPUS_PER_TASK
+module purge
+module load python/3.11.4
+module load pytorch/2.7.0
+
+pip install torch_geometric
+
+python preprocess_batches.py --num_workers 20
