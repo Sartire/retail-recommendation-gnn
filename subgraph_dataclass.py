@@ -59,6 +59,7 @@ class LinkSubgraphDataset(Dataset):
     def drnl_labeling(sub_nodes, u_idx, v_idx, edge_index):
         '''
         Double-radius node labeling (DRNL) algorithm.
+        Label based on distances to nodes in the enclosing subgraph.
         '''
         node_id_to_pos = {int(n): i for i, n in enumerate(sub_nodes.tolist())}
         num_sub_nodes = sub_nodes.size(0)
@@ -152,16 +153,12 @@ class LinkSubgraphDataset(Dataset):
         
         drnl_labels = self.drnl_labeling(node_idx, src, dst, sub_edge_index)
 
-        x_sub = self.graph_features.x[node_idx]
+        sub_node_features = self.graph_features.x[node_idx]
         labels_norm = drnl_labels.view(-1, 1).float()
-        x_with_labels = torch.cat([x_sub, labels_norm], dim=1)
+        nodes_with_drnl = torch.cat([sub_node_features, labels_norm], dim=1)
 
-        batch = torch.zeros(x_with_labels.size(0), dtype=torch.long)
-        return x_with_labels, sub_edge_index
+        return nodes_with_drnl, sub_edge_index
 
-    
-
-        pass
 
 
 
