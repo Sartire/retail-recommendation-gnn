@@ -69,7 +69,7 @@ if __name__ == "__main__":
     print(f'Minimum item interactions: {min_item_interactions}')
 
     # specifications for number of hops and how to split the data
-    specs = [{'hops': 2,
+    specs = [{'hops': 1,
             'splits': {
                 'train':[5,6,7],
                 'test':[8],

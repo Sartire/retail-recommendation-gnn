@@ -1,17 +1,17 @@
 #!/bin/bash
 
 
-#SBATCH --time=1:00:00   # job time limit
+#SBATCH --time=18:00:00   # job time limit
 #SBATCH --nodes=1   # number of nodes
 #SBATCH --ntasks-per-node=1   # number of tasks per node
-#SBATCH --cpus-per-task=39   # number of CPU cores per task
+#SBATCH --cpus-per-task=20   # number of CPU cores per task
 #SBATCH --partition=standard   # partition
 #SBATCH -J "CreateRetailBatches"   # job name
 #SBATCH --mail-user=mcg4aw@virginia.edu   # email address
 #SBATCH --mail-type=ALL
 #SBATCH --constraint=rivanna   # cluster
 #SBATCH --account=shakeri_ds6050   # allocation name
-#SBATCH --mem=15G
+#SBATCH --mem=30G
 
 cd /scratch/mcg4aw/retail-recommendation-gnn
 
@@ -32,5 +32,5 @@ echo '--------------------------------------------------------------------------
 echo 'Starting script...'
 echo '--------------------------------------------------------------------------------'
 
-python preprocess_batches.py --num_workers 39 --base_cache_dir /scratch/mcg4aw/retail_data --min_user_interactions 5 --min_item_interactions 10 --limit 0
+python preprocess_batches.py --num_workers 20 --base_cache_dir /scratch/mcg4aw/retail_data --min_user_interactions 5 --min_item_interactions 10 --limit 0
 
