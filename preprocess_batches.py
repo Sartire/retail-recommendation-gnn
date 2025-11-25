@@ -43,88 +43,92 @@ args = parser.parse_args()
 
 num_workers = args.num_workers
 
-base_data_dir = Path('/scratch/mcg4aw/retail_data')
+if __name__ == "__main__":
+    print(f'Number of workers: {num_workers}')
 
-visited_paths = set()
+    #base_data_dir = Path('/scratch/mcg4aw/retail_data')
+    base_data_dir = Path('./temp')
 
-
-specs = [{'hops': 2,
-        'splits': {
-            'train':[5,6,7],
-            'test':[8],
-            'val':[9]
-            } 
-        },
-        ]
+    visited_paths = set()
 
 
-print(f'Loading data: {ctime()}')
-
-events = preprocess_events()
-
-
-
-
-for i in range(len(specs)):  
-    print(f'Preprocessing for spec {i + 1}: {ctime()}') 
-
-    spec = specs[i]
-    hops = spec['hops']
-    splits = spec['splits']
-    
-    for split in splits.keys():
-
-        cache_dir = base_data_dir / f'hops_{hops}' / f'split_{split}'
-        # if the cache exists, clear it out
-        if cache_dir.exists():
-            print(f"Clearing out {cache_dir}: {ctime()}")
-            for f in cache_dir.iterdir():
-                if f.is_file():
-                    try:
-                        f.unlink()  # Delete the file
-                    except Exception as e:
-                        print(f"Failed to delete {f}: {e}").unlink()
-
-        cache_dir.mkdir(parents=True, exist_ok=True)
-
-        sample_events, pos_sample, neg_sample = get_split_subset(
-                                                        events,
-                                                        subset_col = "month",
-                                                        split_values = splits[split],
-                                                        pos_limit = None,
-                                                        neg_ratio=1
-        )
-
-        graph_feature = create_graph_features(sample_events)
-
-        print(f'Creating {split} dataset: {ctime()}')
-        original_dataset = LinkSubgraphDataset(
-            pos_sample,
-            neg_sample,
-            sample_events,
-            graph_feature,
-            hops = hops
-        )
-
-        print(f'Begin parallel caching for {split}: {ctime()}')
-        start = time()
-
-        num_workers = cpu_count()
-        preprocess_dataset_parallel(original_dataset, cache_dir, num_workers)
-
-        end = time()
-        print(f'Finished parallel caching for {split} in {end - start} seconds: {ctime()}')
-
-        visited_paths.add(cache_dir)
+    specs = [{'hops': 2,
+            'splits': {
+                'train':[5,6,7],
+                'test':[8],
+                'val':[9]
+                } 
+            },
+            ]
 
 
-print(f'Finished preprocessing: {ctime()}')
+    print(f'Loading data: {ctime()}')
 
-print(f'Checking disk usage:')
+    events = preprocess_events(min_user_interactions = 0, min_item_interactions = 0, limit = 20000)
 
-for path in visited_paths:
 
-    total_size = sum(f.stat().st_size for f in path.rglob('*') if f.is_file())
-    print(f"Path: {path.as_posix()} | size: {format_bytes(total_size)} | time: {ctime()}")
 
-print(f'Finished checking disk usage: {ctime()}')
+
+    for i in range(len(specs)):  
+        print(f'Preprocessing for spec {i + 1}: {ctime()}') 
+
+        spec = specs[i]
+        hops = spec['hops']
+        splits = spec['splits']
+
+        for split in splits.keys():
+
+            cache_dir = base_data_dir / f'hops_{hops}' / f'split_{split}'
+            # if the cache exists, clear it out
+            if cache_dir.exists():
+                print(f"Clearing out {cache_dir}: {ctime()}")
+                for f in cache_dir.iterdir():
+                    if f.is_file():
+                        try:
+                            f.unlink()  # Delete the file
+                        except Exception as e:
+                            print(f"Failed to delete {f}: {e}").unlink()
+
+            cache_dir.mkdir(parents=True, exist_ok=True)
+
+            sample_events, pos_sample, neg_sample = get_split_subset(
+                                                            events,
+                                                            subset_col = "month",
+                                                            split_values = splits[split],
+                                                            pos_limit = None,
+                                                            neg_ratio=1
+            )
+
+            graph_feature = create_graph_features(sample_events)
+
+            print(f'Creating {split} dataset: {ctime()}')
+            original_dataset = LinkSubgraphDataset(
+                pos_sample,
+                neg_sample,
+                sample_events,
+                graph_feature,
+                hops = hops
+            )
+
+            print(f'Begin parallel caching for {split}: {ctime()}')
+            start = time()
+
+            num_workers = cpu_count()
+            preprocess_dataset_parallel(original_dataset, cache_dir, num_workers)
+
+            end = time()
+            print(f'Finished parallel caching for {split} in {end - start} seconds: {ctime()}')
+
+            visited_paths.add(cache_dir)
+
+
+    print(f'Finished preprocessing: {ctime()}')
+
+    print(f'Checking disk usage:')
+
+    for path in visited_paths:
+
+        total_size = sum(f.stat().st_size for f in path.rglob('*') if f.is_file())
+        print(f"Path: {path.as_posix()} | size: {format_bytes(total_size)} | time: {ctime()}")
+
+    print(f'Finished checking disk usage: {ctime()}')

@@ -74,7 +74,10 @@ def generate_negative_sample(positive_sample, events_subset, neg_to_pos_ratio = 
 
     min_time = positive_sample['timestamp'].min()
     max_time = positive_sample['timestamp'].max()
-    fake_timestamps = np.random.randint(min_time, max_time + 1, num_additional_negatives)
+    diff_time = max_time - min_time
+
+    fake_timestamps = np.random.uniform(0, 1, num_additional_negatives)
+    fake_timestamps = np.floor(fake_timestamps * diff_time + min_time)
     additional_negatives = random_negative_edges(fake_timestamps, positive_sample, events_subset)
 
     negative_sample = pd.concat([negative_starter, additional_negatives], axis=0)
@@ -105,8 +108,9 @@ def get_split_subset(events: pd.DataFrame,
    
    split_events = reindex_nodes(events[events[subset_col].isin(split_values)])
    
+   
    pos_sample = split_events.query("event == 'addtocart' or event == 'transaction'")[['user_idx', 'item_idx', 'timestamp']]
-
+   
    if pos_limit is not None and pos_limit < pos_sample.shape[0]:
      pos_sample = pos_sample.sample(pos_limit)
 
