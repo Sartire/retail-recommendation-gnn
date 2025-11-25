@@ -12,9 +12,10 @@ import torch
 from torch_geometric.data import Data
 
 
-def download_events( limit = None):
+def download_events( limit = False):
 # download dataset
-    temp_sample_size = limit
+
+    temp_sample_size = 20000
 
     path = kagglehub.dataset_download("retailrocket/ecommerce-dataset")
     events_path = os.path.join(path, "events.csv")
@@ -23,7 +24,7 @@ def download_events( limit = None):
     events = events.sort_values('timestamp').reset_index(drop=True)
     print("Total events:", len(events))
 
-    if temp_sample_size is not None:
+    if limit:
       events = events.sample(n=temp_sample_size, random_state=42).sort_values('timestamp').reset_index(drop=True)
     else:
       events = events.sort_values('timestamp').reset_index(drop=True)

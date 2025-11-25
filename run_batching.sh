@@ -32,4 +32,4 @@ echo '--------------------------------------------------------------------------
 echo 'Starting script...'
 echo '--------------------------------------------------------------------------------'
 
-python preprocess_batches.py --num_workers 10 --base_cache_dir /scratch/mcg4aw/retail_data --min_user_interactions 5 --min_item_interactions 10
+python preprocess_batches.py --num_workers 10 --base_cache_dir /scratch/mcg4aw/retail_data --min_user_interactions 0 --min_item_interactions 0 --limit 1

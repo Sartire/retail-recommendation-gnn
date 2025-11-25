@@ -9,6 +9,13 @@ from multiprocessing import Pool, cpu_count
 import os
 from collections import defaultdict
 
+import warnings
+warnings.filterwarnings("ignore")
+
+if not __name__ == "__main__":
+    print("loaded libraries for worker process?")
+
+
 sys.path.append('./modules')
 
 from subgraph_dataclass import LinkSubgraphDataset
@@ -37,7 +44,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('-n','--num_workers', type=int, default=cpu_count(), help='Number of workers for parallel processing')
 parser.add_argument('-d', '--base_cache_dir', type=str, default='./temp', help='Directory in which to save preprocessed items')
-parser.add_argument('-l', '--limit', type=int, default=-1, help='Maximum number of items to process')
+parser.add_argument('-l', '--limit', type=int, default=0, help='Limit the number of events? (0 for no limit)')
 parser.add_argument('-mu', '--min_user_interactions', type=int, default=5, help='Minimum number of interactions for users')
 parser.add_argument('-mi', '--min_item_interactions', type=int, default=10, help='Minimum number of interactions for items')
 
@@ -51,7 +58,7 @@ if __name__ == "__main__":
     
     num_workers = args.num_workers
     base_data_dir = Path(args.base_cache_dir)
-    limit = args.limit
+    limit = not args.limit == 0
     min_user_interactions = args.min_user_interactions
     min_item_interactions = args.min_item_interactions
 
@@ -74,8 +81,6 @@ if __name__ == "__main__":
 
     print(f'Loading data: {ctime()}')
 
-    if limit < 0:
-        limit = None
 
     events = preprocess_events(min_user_interactions = min_user_interactions, min_item_interactions = min_item_interactions, limit = limit)
 
