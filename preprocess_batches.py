@@ -1,8 +1,5 @@
 import sys
 from time import ctime, time
-
-print(f'Loading libraries: {ctime()}')
-
 import torch
 from torch.utils.data import Dataset, DataLoader
 import pickle
@@ -38,20 +35,33 @@ parser = argparse.ArgumentParser(
     \nCaches are in /scratch/mcg4aw/retail_data''',
 )
 
-parser.add_argument('--num_workers', type=int, default=cpu_count(), help='Number of workers for parallel processing')
+parser.add_argument('-n','--num_workers', type=int, default=cpu_count(), help='Number of workers for parallel processing')
+parser.add_argument('-d', '--base_cache_dir', type=str, default='./temp', help='Directory in which to save preprocessed items')
+parser.add_argument('-l', '--limit', type=int, default=-1, help='Maximum number of items to process')
+parser.add_argument('-mu', '--min_user_interactions', type=int, default=5, help='Minimum number of interactions for users')
+parser.add_argument('-mi', '--min_item_interactions', type=int, default=10, help='Minimum number of interactions for items')
+
 args = parser.parse_args()
 
-num_workers = args.num_workers
+
 
 if __name__ == "__main__":
+    
+
+    
+    num_workers = args.num_workers
+    base_data_dir = Path(args.base_cache_dir)
+    limit = args.limit
+    min_user_interactions = args.min_user_interactions
+    min_item_interactions = args.min_item_interactions
+
     print(f'Number of workers: {num_workers}')
+    print(f'Base cache directory: {base_data_dir}')
+    print(f'Limit: {limit}')
+    print(f'Minimum user interactions: {min_user_interactions}')
+    print(f'Minimum item interactions: {min_item_interactions}')
 
-    #base_data_dir = Path('/scratch/mcg4aw/retail_data')
-    base_data_dir = Path('./temp')
-
-    visited_paths = set()
-
-
+    # specifications for number of hops and how to split the data
     specs = [{'hops': 2,
             'splits': {
                 'train':[5,6,7],
@@ -64,11 +74,13 @@ if __name__ == "__main__":
 
     print(f'Loading data: {ctime()}')
 
-    events = preprocess_events(min_user_interactions = 0, min_item_interactions = 0, limit = 20000)
+    if limit < 0:
+        limit = None
+
+    events = preprocess_events(min_user_interactions = min_user_interactions, min_item_interactions = min_item_interactions, limit = limit)
 
 
-
-
+    visited_paths = set()
     for i in range(len(specs)):  
         print(f'Preprocessing for spec {i + 1}: {ctime()}') 
 
