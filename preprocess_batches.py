@@ -130,7 +130,7 @@ if __name__ == "__main__":
             print(f'Begin parallel caching for {split}: {ctime()}')
             start = time()
 
-            num_workers = cpu_count()
+            num_workers = min(num_workers, cpu_count()-2)
             preprocess_dataset_parallel(original_dataset, cache_dir, num_workers)
 
             end = time()
