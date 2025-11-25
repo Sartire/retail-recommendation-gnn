@@ -3,6 +3,7 @@ from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
 from tqdm import tqdm
 from multiprocessing import Pool, cpu_count
+from functools import partial
 
 from subgraph_dataclass import LinkSubgraphDataset
 from retail_data_prep import preprocess_events, create_graph_features
@@ -29,9 +30,9 @@ class PreprocessedDataset(Dataset):
             return torch.load(f, weights_only=self.weights_only)
 
 
-def preprocess_single_item(args):
+def preprocess_single_item(idx, dataset, cache_dir):
     """Helper function for parallel preprocessing"""
-    idx, dataset, cache_dir = args
+     
     
     # Get preprocessed item
     item = dataset[idx]
@@ -58,9 +59,12 @@ def preprocess_dataset_parallel(dataset, cache_dir, num_workers=None):
     
     if num_workers is None:
         num_workers = cpu_count()
+
+    # prepare a partial for parallel processing
+    preprocess_partial = partial(preprocess_single_item, dataset=dataset, cache_dir=cache_dir)
     
     # Prepare arguments for parallel processing
-    args_list = [(i, dataset, cache_dir) for i in range(len(dataset))]
+    idx_list = [(i, dataset, cache_dir) for i in range(len(dataset))]
     
     print(f"Preprocessing {len(dataset)} items using {num_workers} workers...")
     
@@ -68,7 +72,7 @@ def preprocess_dataset_parallel(dataset, cache_dir, num_workers=None):
     with Pool(num_workers) as pool:
         list(
             tqdm(
-            pool.imap(preprocess_single_item, args_list),
+            pool.imap(preprocess_partial, idx_list),
             total=len(dataset),
             desc="Preprocessing"
         )
