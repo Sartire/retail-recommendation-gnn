@@ -8,7 +8,7 @@ from sklearn.metrics import roc_auc_score, f1_score, accuracy_score
 
 from modules.model_specifications import BaselineGCNSubgraphEncoder
 from modules.subgraph_dataclass import PreprocessedDataset, create_preprocessed_dataloader
-
+import pickle
 from pathlib import Path
 
 from time import time, ctime
@@ -114,6 +114,9 @@ gcn_opt = torch.optim.Adam(gcn_model.parameters(), lr=1e-3)
 
 starttime = time()
 
+train_results = []
+test_results = []
+
 print("GCN Training")
 for epoch in range(1, num_epochs + 1):
     train_loss, train_auc, train_f1, train_acc = run_epoch(train_loader, gcn_model, gcn_opt)
@@ -122,4 +125,10 @@ for epoch in range(1, num_epochs + 1):
     print(f"[GCN] Epoch {epoch:02d} | Train loss={train_loss:.4f}, AUC={train_auc:.4f}, F1={train_f1:.4f}, ACC={train_acc:.4f}")
     print(f"Test loss={test_loss:.4f}, AUC={test_auc:.4f}, F1={test_f1:.4f}, ACC={test_acc:.4f}")
 
+    train_results.append((train_loss, train_auc, train_f1, train_acc))
+    test_results.append((test_loss, test_auc, test_f1, test_acc))
+
 print(f'Finished in {(time() - starttime)/60} minutes')
+
+pickle.dump(train_results, open(Path('./train_results.pkl'), 'wb'))
+pickle.dump(test_results, open(Path('./test_results.pkl'), 'wb'))
