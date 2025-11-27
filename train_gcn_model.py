@@ -5,7 +5,7 @@ import torch.optim as optim
 from torch_geometric.loader import DataLoader
 from torch_geometric.nn import GCNConv
 from sklearn.metrics import roc_auc_score, f1_score, accuracy_score
-
+from tqdm import tqdm
 from modules.model_specifications import BaselineGCNSubgraphEncoder
 from modules.subgraph_dataclass import PreprocessedDataset, create_preprocessed_dataloader
 import pickle
@@ -13,7 +13,7 @@ from pathlib import Path
 
 from time import time, ctime
 
-cache_data_dir = 'scratch/mcg4aw/retail_data/hops_1'
+cache_data_dir = '/scratch/mcg4aw/retail_data/hops_1'
 
 cache_base_path = Path(cache_data_dir)
 

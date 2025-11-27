@@ -111,7 +111,7 @@ if __name__ == "__main__":
     )
 
     # specifications for number of hops and how to split the data
-    specs = [{'hops': 1,
+    specs = [{'hops': 2,
             'splits': {
                 'train':[5,6,7],
                 'test':[8],
