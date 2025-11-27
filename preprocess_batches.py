@@ -6,8 +6,17 @@ import pickle
 from pathlib import Path
 from tqdm import tqdm
 from multiprocessing import cpu_count
-import os
+
 from collections import defaultdict
+import ray
+import os
+
+project_root = os.path.dirname(os.path.abspath(__file__))
+modules_path = os.path.join(project_root, "modules")
+sys.path.insert(0, modules_path)
+
+
+
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -16,12 +25,15 @@ if not __name__ == "__main__":
     print("loaded libraries for worker process?")
 
 
-sys.path.append('./modules')
+
 
 from subgraph_dataclass import LinkSubgraphDataset
 from retail_data_prep import preprocess_events, create_graph_features
 from data_splitting import get_split_subset
-from parallel_preprocessing import preprocess_dataset_parallel
+
+
+
+
 
 # display bytes in logs so we see how much data is written
 def format_bytes(size):
@@ -30,6 +42,25 @@ def format_bytes(size):
             return f"{size:.2f} {unit}"
         size /= 1024.0
     return f"{size:.2f} PB"
+
+
+@ray.remote
+def preprocess_single_item(idx, dataset_ref, cache_dir):
+    """Helper function for parallel preprocessing"""
+     
+    dataset = ray.get(dataset_ref)
+    
+    # Get preprocessed item
+    item = dataset[idx]
+    
+    # Save to disk
+    cache_path = Path(cache_dir) / f"item_{idx:06d}.pt"
+    with open(cache_path, 'wb') as f:
+        torch.save(item, f)
+    
+    return idx
+
+
 
 
 import argparse
@@ -67,6 +98,13 @@ if __name__ == "__main__":
     print(f'Limit: {limit}')
     print(f'Minimum user interactions: {min_user_interactions}')
     print(f'Minimum item interactions: {min_item_interactions}')
+
+
+    ray.init(num_cpus=num_workers,
+             runtime_env={
+                         "py_modules": [modules_path]
+                         }
+    )
 
     # specifications for number of hops and how to split the data
     specs = [{'hops': 1,
@@ -119,7 +157,7 @@ if __name__ == "__main__":
             graph_feature = create_graph_features(sample_events)
 
             print(f'Creating {split} dataset: {ctime()}')
-            original_dataset = LinkSubgraphDataset(
+            dataset = LinkSubgraphDataset(
                 pos_sample,
                 neg_sample,
                 sample_events,
@@ -130,8 +168,40 @@ if __name__ == "__main__":
             print(f'Begin parallel caching for {split}: {ctime()}')
             start = time()
 
-            num_workers = min(num_workers, cpu_count()-2)
-            preprocess_dataset_parallel(original_dataset, cache_dir, num_workers)
+            dataset_ref = ray.put(dataset)
+
+            # Prepare arguments for parallel processing
+            idx_list = [i for i in range(len(dataset))]
+
+            print(f"Preprocessing {len(dataset)} items using {num_workers} workers...")
+            print(f'Start time: {ctime()}')
+
+            #futures = [preprocess_single_item.remote(idx, dataset, cache_dir) for idx in idx_list]
+
+            all_results = []
+
+            # Process in parallel with progress bar
+            parallel_batch_size = 100
+            for i in tqdm(range(0, len(dataset), parallel_batch_size), desc="Batches"):
+
+            
+                batch_inds = idx_list[i:i+parallel_batch_size]
+                futures = [preprocess_single_item.remote(idx, dataset_ref, cache_dir) for idx in batch_inds]
+                batch_results = ray.get(futures)
+
+            # Process/save results immediately
+                all_results.extend(batch_results)
+
+            # Clean up after each parallel batch
+                del futures, batch_results
+
+            # Clean up when completely done
+            del dataset_ref
+            del all_results
+
+            print(f"Preprocessing complete! Data saved to {cache_dir}")
+            print(f'End time: {ctime()}')
+
 
             end = time()
             print(f'Finished parallel caching for {split} in {end - start} seconds: {ctime()}')
@@ -140,6 +210,7 @@ if __name__ == "__main__":
 
 
     print(f'Finished preprocessing: {ctime()}')
+    ray.shutdown()
 
     print(f'Checking disk usage:')
 
