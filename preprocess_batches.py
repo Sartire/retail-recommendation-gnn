@@ -12,8 +12,8 @@ import ray
 import os
 
 project_root = os.path.dirname(os.path.abspath(__file__))
-modules_path = os.path.join(project_root, "modules")
-sys.path.insert(0, modules_path)
+#modules_path = os.path.join(project_root, "modules")
+sys.path.insert(0, project_root)
 
 
 
@@ -27,9 +27,9 @@ if not __name__ == "__main__":
 
 
 
-from subgraph_dataclass import LinkSubgraphDataset
-from retail_data_prep import preprocess_events, create_graph_features
-from data_splitting import get_split_subset
+from modules.subgraph_dataclass import LinkSubgraphDataset
+from modules.retail_data_prep import preprocess_events, create_graph_features
+from modules.data_splitting import get_split_subset
 
 
 
@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
     ray.init(num_cpus=num_workers,
              runtime_env={
-                         "py_modules": [modules_path]
+                         "working_dir": project_root
                          }
     )
 
