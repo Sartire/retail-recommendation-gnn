@@ -6,7 +6,7 @@
 #SBATCH --ntasks-per-node=1   # number of tasks per node
 #SBATCH --cpus-per-task=10   # number of CPU cores per task
 #SBATCH --partition=standard   # partition
-#SBATCH -J "CreateRetailBatches"   # job name
+#SBATCH -J "TestRetailBatches"   # job name
 #SBATCH --mail-user=mcg4aw@virginia.edu   # email address
 #SBATCH --mail-type=ALL
 #SBATCH --constraint=rivanna   # cluster

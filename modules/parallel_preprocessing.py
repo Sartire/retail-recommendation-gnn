@@ -3,15 +3,19 @@ from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
 from tqdm import tqdm
 
-from subgraph_dataclass import LinkSubgraphDataset
+
 from retail_data_prep import preprocess_events, create_graph_features
 from data_splitting import get_split_subset
 from functools import partial
 
 import ray
+import sys
+import os
 
 from multiprocessing import cpu_count
 from time import ctime
+
+
 
 
 @ray.remote
@@ -46,7 +50,23 @@ def preprocess_dataset_parallel(dataset, cache_dir, num_workers=None, parallel_b
     if num_workers is None:
         num_workers = cpu_count()
 
-    ray.init(num_cpus=num_workers)
+    # ensure the workers can find the modules
+
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    modules_path = os.path.join(project_root, "modules")
+    sys.path.insert(0, modules_path)
+
+# Import your class
+    from subgraph_dataclass import YourDatasetClass
+
+    
+    ray.init(num_cpus=num_workers,
+             runtime_env={
+                         "py_modules": [modules_path]
+                         }
+    )
+
+
     dataset_ref = ray.put(dataset)
 
     # Prepare arguments for parallel processing
