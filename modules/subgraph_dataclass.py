@@ -151,11 +151,12 @@ class LinkSubgraphDataset(Dataset):
                                                                             directed=False)
         
         
-
+        node_idx = node_idx.clone()
+        sub_edge_index = sub_edge_index.clone()
         
         drnl_labels = self.drnl_labeling(node_idx, src, dst, sub_edge_index)
 
-        sub_node_features = self.graph_node_features[node_idx]
+        sub_node_features = self.graph_node_features[node_idx].clone()
         labels_norm = drnl_labels.view(-1, 1).float()
         nodes_with_drnl = torch.cat([sub_node_features, labels_norm], dim=1)
 
