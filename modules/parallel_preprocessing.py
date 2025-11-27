@@ -4,9 +4,6 @@ from pathlib import Path
 from tqdm import tqdm
 
 
-from retail_data_prep import preprocess_events, create_graph_features
-from data_splitting import get_split_subset
-from functools import partial
 
 import ray
 import sys
@@ -52,8 +49,8 @@ def preprocess_dataset_parallel(dataset, cache_dir, num_workers=None, parallel_b
 
     # ensure the workers can find the modules
 
-    project_root = os.path.dirname(os.path.abspath(__file__))
-    modules_path = os.path.join(project_root, "modules")
+    
+    modules_path = os.path.dirname(os.path.abspath(__file__))
     sys.path.insert(0, modules_path)
 
 # Import your class
