@@ -45,14 +45,14 @@ def format_bytes(size):
 
 
 @ray.remote
-def preprocess_single_item(idx, dataset_ref, cache_dir):
+def preprocess_single_item(idx, dataset, cache_dir):
     """Helper function for parallel preprocessing"""
     
-    print(f"Type of dataset_ref: {type(dataset_ref)}")
-    print(f"Value of dataset_ref: {dataset_ref}")
-    assert isinstance(dataset_ref, ray.ObjectRef), "Lost the ObjectRef!"
+    #print(f"Type of dataset_ref: {type(dataset_ref)}")
+    #print(f"Value of dataset_ref: {dataset_ref}")
+    #assert isinstance(dataset_ref, ray.ObjectRef), "Lost the ObjectRef!"
 
-    dataset = ray.get(dataset_ref)
+    #dataset = ray.get(dataset_ref)
     
     # Get preprocessed item
     item = dataset[idx]
