@@ -170,6 +170,9 @@ if __name__ == "__main__":
 
             dataset_ref = ray.put(dataset)
 
+            print(dataset_ref)
+            quit()
+
             # Prepare arguments for parallel processing
             idx_list = [i for i in range(len(dataset))]
 
