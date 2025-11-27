@@ -57,7 +57,7 @@ def preprocess_dataset_parallel(dataset, cache_dir, num_workers=None, parallel_b
     sys.path.insert(0, modules_path)
 
 # Import your class
-    from subgraph_dataclass import YourDatasetClass
+    from subgraph_dataclass import LinkSubgraphDataset
 
     
     ray.init(num_cpus=num_workers,
