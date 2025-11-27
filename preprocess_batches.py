@@ -168,15 +168,21 @@ if __name__ == "__main__":
             print(f'Begin parallel caching for {split}: {ctime()}')
             start = time()
 
-            try:
-                pickled = pickle.dumps(dataset)
-                unpickled = pickle.loads(pickled)
-                print("✓ Dataset is pickleable")
-            except Exception as e:
-                print(f"✗ Pickle error: {e}")
+
             dataset_ref = ray.put(dataset)
 
+            print(f"Type of dataset: {type(dataset)}")
+            print(f"Type of dataset_ref: {type(dataset_ref)}")
+            print(f"Is dataset_ref an ObjectRef? {isinstance(dataset_ref, ray.ObjectRef)}")
+            assert isinstance(dataset_ref, ray.ObjectRef), f"Expected ObjectRef, got {type(dataset_ref)}"
             
+            # Try to verify it's in the object store
+            try:
+                test_get = ray.get(dataset_ref)
+                print(f"Successfully retrieved from object store, type: {type(test_get)}")
+            except Exception as e:
+                print(f"ERROR retrieving from object store: {e}")
+
 
             # Prepare arguments for parallel processing
             idx_list = [i for i in range(len(dataset))]
@@ -184,15 +190,13 @@ if __name__ == "__main__":
             print(f"Preprocessing {len(dataset)} items using {num_workers} workers...")
             print(f'Start time: {ctime()}')
 
-            #futures = [preprocess_single_item.remote(idx, dataset, cache_dir) for idx in idx_list]
-
             all_results = []
 
             # Process in parallel with progress bar
             parallel_batch_size = 100
             for i in tqdm(range(0, len(dataset), parallel_batch_size), desc="Batches"):
 
-            
+                assert isinstance(dataset_ref, ray.ObjectRef), "Lost the ObjectRef!"
                 batch_inds = idx_list[i:i+parallel_batch_size]
                 futures = [preprocess_single_item.remote(idx, dataset_ref, cache_dir) for idx in batch_inds]
                 batch_results = ray.get(futures)
