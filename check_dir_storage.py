@@ -1,7 +1,14 @@
 from pathlib import Path
+import argparse
+
+parser = argparse.ArgumentParser(prog='check_dir_storage.py',
+    description='''get the amount of storage used in a directory''')
+parser.add_argument('--path', type=str)
+
+path = parser.parse_args().path
 
 # Using pathlib (recommended)
-total_size = sum(f.stat().st_size for f in Path('./temp/test_cache').rglob('*') if f.is_file())
+total_size = sum(f.stat().st_size for f in Path(path).rglob('*') if f.is_file())
 print(f"Total size: {total_size:,} bytes")
 
 # Convert to human-readable format
