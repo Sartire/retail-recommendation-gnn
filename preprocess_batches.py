@@ -6,7 +6,7 @@ import pickle
 from pathlib import Path
 from tqdm import tqdm
 from multiprocessing import cpu_count
-
+import pickle
 from collections import defaultdict
 import ray
 import os
@@ -162,16 +162,21 @@ if __name__ == "__main__":
                 neg_sample,
                 sample_events,
                 graph_feature,
-                hops = hops
+                hops = hops    
             )
 
             print(f'Begin parallel caching for {split}: {ctime()}')
             start = time()
 
+            try:
+                pickled = pickle.dumps(dataset)
+                unpickled = pickle.loads(pickled)
+                print("✓ Dataset is pickleable")
+            except Exception as e:
+                print(f"✗ Pickle error: {e}")
             dataset_ref = ray.put(dataset)
 
-            print(dataset_ref)
-            quit()
+            
 
             # Prepare arguments for parallel processing
             idx_list = [i for i in range(len(dataset))]

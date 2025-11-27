@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import torch_geometric
 
-from torch.utils.data import Dataset #, DataLoader
+from torch.utils.data import Dataset, DataLoader
 #from torch_geometric.data import Data
 from torch_geometric.utils import k_hop_subgraph, to_undirected 
 #from torch_geometric.nn import GCNConv, GATConv, global_mean_pool
@@ -33,7 +33,7 @@ class LinkSubgraphDataset(Dataset):
         self.neg_edges = neg_edge_sample
         self.full_edge_data = full_edge_data
         self.hops = hops
-        self.graph_features = graph_features
+        self.graph_node_features = graph_features.x
 
 
         self.sample_edges = pd.concat([pos_edge_sample, neg_edge_sample], axis=0)
@@ -155,7 +155,7 @@ class LinkSubgraphDataset(Dataset):
         
         drnl_labels = self.drnl_labeling(node_idx, src, dst, sub_edge_index)
 
-        sub_node_features = self.graph_features.x[node_idx]
+        sub_node_features = self.graph_node_features[node_idx]
         labels_norm = drnl_labels.view(-1, 1).float()
         nodes_with_drnl = torch.cat([sub_node_features, labels_norm], dim=1)
 
