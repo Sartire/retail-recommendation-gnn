@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
 from tqdm import tqdm
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool, cpu_count, shared_memory
 from functools import partial
 
 from subgraph_dataclass import LinkSubgraphDataset
