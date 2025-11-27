@@ -6,14 +6,16 @@ import numpy as np
 import pandas as pd
 import torch_geometric
 
-from torch.utils.data import Dataset, DataLoader
-from torch_geometric.data import Data
+from torch.utils.data import Dataset #, DataLoader
+#from torch_geometric.data import Data
 from torch_geometric.utils import k_hop_subgraph, to_undirected 
-from torch_geometric.nn import GCNConv, GATConv, global_mean_pool
+#from torch_geometric.nn import GCNConv, GATConv, global_mean_pool
 
 from datetime import datetime
 from collections import deque, defaultdict
 from collections.abc import Sequence
+
+from pathlib import Path
 
 # EdgeList with columns ['user_idx', 'item_idx', 'timestamp']
 #type EdgeList = pd.DataFrame
@@ -161,4 +163,35 @@ class LinkSubgraphDataset(Dataset):
 
 
 
+class PreprocessedDataset(Dataset):
+    """Fast dataset that loads preprocessed data from disk"""
+    
+    def __init__(self, cache_dir, weights_only = False):
+        self.cache_dir = Path(cache_dir)
+        self.weights_only = weights_only
+        self.file_list = sorted(list(self.cache_dir.glob("*.pt")))
+        
+        if not self.file_list:
+            raise ValueError(f"No preprocessed files found in {cache_dir}")
+    
+    def __len__(self):
+        return len(self.file_list)
+    
+    def __getitem__(self, idx):
+        with open(self.file_list[idx], 'rb') as f:
+            return torch.load(f, weights_only=self.weights_only)
 
+def create_preprocessed_dataloader(cache_dir, batch_size=32, **dataloader_kwargs):
+    """
+    Create a DataLoader from preprocessed data.
+    
+    Args:
+        cache_dir: Directory containing preprocessed .pkl files
+        batch_size: Batch size for DataLoader
+        **dataloader_kwargs: Additional arguments for DataLoader
+    
+    Returns:
+        DataLoader instance
+    """
+    dataset = PreprocessedDataset(cache_dir)
+    return DataLoader(dataset, batch_size=batch_size, **dataloader_kwargs)

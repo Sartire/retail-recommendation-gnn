@@ -5,7 +5,7 @@ from torch.utils.data import Dataset, DataLoader
 import pickle
 from pathlib import Path
 from tqdm import tqdm
-from multiprocessing import Pool, cpu_count
+from multiprocessing import cpu_count
 import os
 from collections import defaultdict
 
