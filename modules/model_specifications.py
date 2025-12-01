@@ -24,10 +24,10 @@ class BaselineGCNSubgraphEncoder(nn.Module):
             nn.Linear(hidden_channels, 1)
         )
 
-    def forward(self, x, edge_index, batch):
+    def forward(self, x, edge_index, edge_weight,  batch):
         h = x
         for conv in self.convs:
-            h = conv(h, edge_index)
+            h = conv(h, edge_index, edge_weight)
             h = torch.relu(h)
         hg = global_mean_pool(h, batch)
         logit = self.mlp(hg).view(-1)

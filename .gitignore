@@ -2,3 +2,4 @@ rr_data/*
 temp/*
 __pycache__/*
 modules/__pycache__/*
+temp.ipynb

@@ -1,0 +1,38 @@
+{"hop2_r1":{"hops": 2,
+            "neg_ratio" : 1,
+            "splits": {
+                "train":[5,6,7],
+                "test":[8],
+                "val":[9]
+                } 
+
+            },
+"hop2_r15":{"hops": 2,
+            "neg_ratio" : 1.5,
+            "splits": {
+                "train":[5,6,7],
+                "test":[8],
+                "val":[9]
+                } 
+
+            },
+"hop1_r15":{"hops": 1,
+            "neg_ratio" : 1.5,
+            "splits": {
+                "train":[5,6,7],
+                "test":[8],
+                "val":[9]
+                } 
+
+            },
+"hop1_r1":{"hops": 1,
+            "neg_ratio" : 1,
+            "splits": {
+                "train":[5,6,7],
+                "test":[8],
+                "val":[9]
+                } 
+
+            }
+
+    }

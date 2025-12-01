@@ -10,6 +10,7 @@ import pickle
 from collections import defaultdict
 import ray
 import os
+import json
 
 project_root = os.path.dirname(os.path.abspath(__file__))
 #modules_path = os.path.join(project_root, "modules")
@@ -111,14 +112,10 @@ if __name__ == "__main__":
     )
 
     # specifications for number of hops and how to split the data
-    specs = [{'hops': 2,
-            'splits': {
-                'train':[5,6,7],
-                'test':[8],
-                'val':[9]
-                } 
-            },
-            ]
+    with open('data_splits.json', 'r') as f:
+        specs = json.load(f)
+        f.close()
+    
 
 
     print(f'Loading data: {ctime()}')
@@ -128,16 +125,17 @@ if __name__ == "__main__":
 
 
     visited_paths = set()
-    for i in range(len(specs)):  
-        print(f'Preprocessing for spec {i + 1}: {ctime()}') 
+    for setting in specs.keys():
+        print(f'Preprocessing begins for spec {setting}: {ctime()}') 
 
-        spec = specs[i]
+        spec = specs[setting]
         hops = spec['hops']
+        neg_ratio = spec['neg_ratio']
         splits = spec['splits']
 
         for split in splits.keys():
 
-            cache_dir = base_data_dir / f'hops_{hops}' / f'split_{split}'
+            cache_dir = base_data_dir / spec / f'split_{split}'
             # if the cache exists, clear it out
             if cache_dir.exists():
                 print(f"Clearing out {cache_dir}: {ctime()}")
@@ -155,7 +153,7 @@ if __name__ == "__main__":
                                                             subset_col = "month",
                                                             split_values = splits[split],
                                                             pos_limit = None,
-                                                            neg_ratio=1
+                                                            neg_ratio=neg_ratio
             )
 
             graph_feature = create_graph_features(sample_events)

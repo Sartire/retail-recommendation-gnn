@@ -10,10 +10,11 @@ from modules.model_specifications import BaselineGCNSubgraphEncoder
 from modules.subgraph_dataclass import PreprocessedDataset, create_preprocessed_dataloader
 import pickle
 from pathlib import Path
+import numpy as np
 
 from time import time, ctime
 
-cache_data_dir = '/scratch/mcg4aw/retail_data/hops_1'
+cache_data_dir = '/scratch/mcg4aw/retail_data/hop1_r1'
 
 cache_base_path = Path(cache_data_dir)
 
@@ -21,12 +22,13 @@ cache_base_path = Path(cache_data_dir)
 
 
 def collate_subgraphs(batch):
-    xs, eis, ys = zip(*batch)
+    xs, eis, ews, ys = zip(*batch)
 
     ys = torch.stack(ys, dim=0)
 
     new_x = []
     new_edge_index = []
+    
     # track which subgraph the data is from
     new_batch = []
 
@@ -45,9 +47,10 @@ def collate_subgraphs(batch):
 
     new_x = torch.cat(new_x, dim=0)
     new_edge_index = torch.cat(new_edge_index, dim=1)
+    new_edge_weights = torch.cat(ews, dim=0)
     new_batch = torch.cat(new_batch, dim=0)
 
-    return new_x, new_edge_index, new_batch, ys
+    return new_x, new_edge_index, new_edge_weights, new_batch, ys
 
 BATCH_SIZE = 10
 

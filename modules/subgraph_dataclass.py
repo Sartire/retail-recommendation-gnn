@@ -52,9 +52,9 @@ class LinkSubgraphDataset(Dataset):
         # 
         y = self.labels[idx]
 
-        subgraph_nodes, subgraph_edges = self.extract_enclosing_subgraph(idx)
+        subgraph_nodes, subgraph_edges, sub_edge_weights = self.extract_enclosing_subgraph(idx)
 
-        return subgraph_nodes, subgraph_edges, torch.tensor(y, dtype=torch.float)
+        return subgraph_nodes, subgraph_edges, sub_edge_weights, torch.tensor(y, dtype=torch.float)
     
     def drnl_labeling(self, sub_nodes, u_idx, v_idx, edge_index):
         '''
@@ -112,10 +112,10 @@ class LinkSubgraphDataset(Dataset):
 
         labels = 1 + dist_min + dist_sum_half * (dist_sum_half + 1)
 
-        u_pos_t = torch.tensor(u_pos, dtype=torch.long)
-        v_pos_t = torch.tensor(v_pos, dtype=torch.long)
-        labels[u_pos_t] = 1
-        labels[v_pos_t] = 1
+        #u_pos_t = torch.tensor(u_pos, dtype=torch.long)
+        #v_pos_t = torch.tensor(v_pos, dtype=torch.long)
+        #labels[u_pos_t] = 1
+        #labels[v_pos_t] = 1
 
         return labels
     
@@ -131,13 +131,13 @@ class LinkSubgraphDataset(Dataset):
         
         # subset to edges with earlier timestamps
         # NOTE this prevents the edge to be predicited from appearing in the induced subgraph. 
-        edge_history = self.full_edge_data[self.full_edge_data['timestamp'] < current_timestamp]
+        edge_history_df = self.full_edge_data[self.full_edge_data['timestamp'] < current_timestamp].reset_index(drop=True)
 
         #create tensor of the historical indicies
         # add self edges to prevent the anchor nodes from being out of bounds
 
-        src_history = torch.tensor(np.concatenate([[src], [dst], edge_history['user_idx'].to_numpy()]), dtype=torch.long)
-        dst_history = torch.tensor(np.concatenate([[src], [dst], edge_history['item_idx'].to_numpy()]), dtype=torch.long)
+        src_history = torch.tensor(np.concatenate([[src], [dst], edge_history_df['user_idx'].to_numpy()]), dtype=torch.long)
+        dst_history = torch.tensor(np.concatenate([[src], [dst], edge_history_df['item_idx'].to_numpy()]), dtype=torch.long)
         edge_history = to_undirected(torch.stack([src_history, dst_history], dim=0))
 
         # extract enclosing subgraph
@@ -151,6 +151,8 @@ class LinkSubgraphDataset(Dataset):
                                                                             directed=False)
         
         
+        sub_edge_weights = torch.tensor(edge_history_df.weight[edge_mask.to_numpy()], dtype=torch.float)
+
         node_idx = node_idx.clone()
         sub_edge_index = sub_edge_index.clone()
         
@@ -160,7 +162,7 @@ class LinkSubgraphDataset(Dataset):
         labels_norm = drnl_labels.view(-1, 1).float()
         nodes_with_drnl = torch.cat([sub_node_features, labels_norm], dim=1)
 
-        return nodes_with_drnl, sub_edge_index
+        return nodes_with_drnl, sub_edge_index, sub_edge_weights
 
 
 
