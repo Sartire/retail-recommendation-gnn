@@ -142,7 +142,7 @@ if __name__ == "__main__":
 
         for split in splits.keys():
 
-            cache_dir = base_data_dir / spec / f'split_{split}'
+            cache_dir = base_data_dir / setting / f'split_{split}'
             # if the cache exists, clear it out
             if cache_dir.exists():
                 print(f"Clearing out {cache_dir}: {ctime()}")
