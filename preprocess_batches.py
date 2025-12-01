@@ -12,6 +12,9 @@ import ray
 import os
 import json
 
+
+
+
 project_root = os.path.dirname(os.path.abspath(__file__))
 #modules_path = os.path.join(project_root, "modules")
 sys.path.insert(0, project_root)
@@ -110,6 +113,10 @@ if __name__ == "__main__":
                          "working_dir": project_root
                          }
     )
+
+    # set umask for the created data
+
+    old_mask = os.umask(0o007)
 
     # specifications for number of hops and how to split the data
     with open('data_splits.json', 'r') as f:
@@ -225,6 +232,7 @@ if __name__ == "__main__":
 
     print(f'Finished preprocessing: {ctime()}')
     ray.shutdown()
+    os.umask(old_mask)
 
     print(f'Checking disk usage:')
 
@@ -234,3 +242,4 @@ if __name__ == "__main__":
         print(f"Path: {path.as_posix()} | size: {format_bytes(total_size)} | time: {ctime()}")
 
     print(f'Finished checking disk usage: {ctime()}')
+
