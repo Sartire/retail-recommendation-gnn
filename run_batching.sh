@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-#SBATCH --time=18:00:00   # job time limit
+#SBATCH --time=5:00:00   # job time limit
 #SBATCH --nodes=1   # number of nodes
 #SBATCH --ntasks-per-node=1   # number of tasks per node
 #SBATCH --cpus-per-task=20   # number of CPU cores per task

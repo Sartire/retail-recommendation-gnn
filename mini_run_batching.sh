@@ -4,7 +4,7 @@
 #SBATCH --time=18:00:00   # job time limit
 #SBATCH --nodes=1   # number of nodes
 #SBATCH --ntasks-per-node=1   # number of tasks per node
-#SBATCH --cpus-per-task=10   # number of CPU cores per task
+#SBATCH --cpus-per-task=5   # number of CPU cores per task
 #SBATCH --partition=standard   # partition
 #SBATCH -J "TestRetailBatches"   # job name
 #SBATCH --mail-user=mcg4aw@virginia.edu   # email address
@@ -32,5 +32,5 @@ echo '--------------------------------------------------------------------------
 echo 'Starting script...'
 echo '--------------------------------------------------------------------------------'
 
-python preprocess_batches.py --num_workers 10 --base_cache_dir /scratch/mcg4aw/retail_data --min_user_interactions 0 --min_item_interactions 0 --limit 1
+python preprocess_batches.py --num_workers 5 --base_cache_dir /scratch/mcg4aw/retail_data --min_user_interactions 0 --min_item_interactions 0 --limit 1
 

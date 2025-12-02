@@ -19,7 +19,7 @@ import os
 cache_data_dir = '/scratch/mcg4aw/retail_data'
 output_dir = '/scratch/mcg4aw/retail_output'
 
-old_umask =os.umask(0o117)
+old_umask =os.umask(0o007)
 
 # SETUP -------------------------------------------------------
 ## configurations
@@ -86,16 +86,17 @@ def run_epoch(loader, model, optimizer=None):
     all_labels = []
     total_loss = 0.0
 
-    for x, edge_index, batch, y in tqdm(loader):
+    for x, edge_index, edge_weights, batch, y in tqdm(loader):
         x = x.to(device)
         edge_index = edge_index.to(device)
+        edge_weights = edge_weights.to(device)
         batch = batch.to(device)
         y = y.to(device)
 
         if is_train:
             optimizer.zero_grad()
 
-        logits = model(x, edge_index, batch)
+        logits = model(x, edge_index, edge_weights, batch)
         loss = criterion(logits, y)
 
         if is_train:
