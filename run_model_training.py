@@ -29,6 +29,7 @@ num_epochs = 2
 num_layers = 2
 num_heads = 4
 hidden_dim = 64
+lr_start = 1e-3
 
 
 cache_base_path = Path(cache_data_dir)
@@ -126,7 +127,7 @@ def run_epoch(loader, model, optimizer=None):
     return avg_loss, auc, f1, acc
 
 
-def train_model_for_epochs(model, optimizer, train_loader, test_loader, num_epochs, name='None'):
+def train_model_for_epochs(model, optimizer, scheduler, train_loader, test_loader, num_epochs, name='None'):
     train_results = []
     test_results = []
 
@@ -139,6 +140,8 @@ def train_model_for_epochs(model, optimizer, train_loader, test_loader, num_epoc
 
         train_results.append((train_loss, train_auc, train_f1, train_acc))
         test_results.append((test_loss, test_auc, test_f1, test_acc))
+        scheduler.step()
+
 
     # combine the results into a dataframe
     train_loss, train_auc, train_f1, train_acc = zip(*train_results)
@@ -178,12 +181,13 @@ for version in data_versions:
 
     ## train models 1 at a time to reduce GPU usage
     ## GCN ----------------------
-    '''
+    
     gcn_model = BaselineGCNSubgraphEncoder(in_channels=in_channels, hidden_channels=hidden_dim, num_layers=num_layers).to(device)
-    gcn_opt = torch.optim.Adam(gcn_model.parameters(), lr=1e-3)
+    gcn_opt = torch.optim.AdamW(gcn_model.parameters(), lr=lr_start)
+    sched = torch.optim.lr_scheduler.CosineAnnealingLR(gcn_opt, num_epochs)
 
 
-    gcn_performance = train_model_for_epochs(gcn_model, gcn_opt, train_loader, test_loader, num_epochs, name='GCN')
+    gcn_performance = train_model_for_epochs(gcn_model, gcn_opt, sched, train_loader, test_loader, num_epochs, name='GCN')
     gcn_performance['model'] = 'GCN'
     
     
@@ -195,6 +199,7 @@ for version in data_versions:
     del gcn_model
     del gcn_opt
     del params
+    del sched
     torch.cuda.empty_cache()
 
     ## GAT -------------------------------
@@ -203,9 +208,10 @@ for version in data_versions:
                                        hidden_channels=hidden_dim,
                                        num_layers=num_layers, 
                                        heads=num_heads).to(device) 
-    gat_opt = torch.optim.Adam(gat_model.parameters(), lr=1e-3)
+    gat_opt = torch.optim.AdamW(gat_model.parameters(), lr=lr_start)
+    sched = torch.optim.lr_scheduler.CosineAnnealingLR(gat_opt, num_epochs)
 
-    gat_performance = train_model_for_epochs(gat_model, gat_opt, train_loader, test_loader, num_epochs, name='GAT')
+    gat_performance = train_model_for_epochs(gat_model, gat_opt, sched, train_loader, test_loader, num_epochs, name='GAT')
     gat_performance['model'] = 'GAT'
 
     # clean up to reduce GPU memory usage
@@ -215,15 +221,16 @@ for version in data_versions:
     del gat_opt
     del params
     torch.cuda.empty_cache() 
-    '''
+    
     ### PGA -----------------------
 
     pga_model = PGADRLSubgraphEncoder(in_channels=in_channels,
                                       hidden_channels=hidden_dim,
                                       num_layers=num_layers).to(device)
-    pga_opt = torch.optim.Adam(pga_model.parameters(), lr=1e-3)
+    pga_opt = torch.optim.AdamW(pga_model.parameters(), lr=lr_start)
+    sched = torch.optim.lr_scheduler.CosineAnnealingLR(pga_opt, num_epochs)
 
-    pga_performance = train_model_for_epochs(pga_model, pga_opt, train_loader, test_loader, num_epochs, name='PGA')
+    pga_performance = train_model_for_epochs(pga_model, pga_opt, sched, train_loader, test_loader, num_epochs, name='PGA')
     pga_performance['model'] = 'PGA'
 
     # clean up to reduce GPU memory usage
