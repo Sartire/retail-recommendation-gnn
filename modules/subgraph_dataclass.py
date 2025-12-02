@@ -150,7 +150,10 @@ class LinkSubgraphDataset(Dataset):
                                                                             relabel_nodes=True,
                                                                             directed=False)
         
-        
+        print(edge_mask)
+        print(edge_mask.shape)
+        print(edge_history_df.shape)
+        print(sub_edge_index.shape)
         sub_edge_weights = torch.tensor(edge_history_df.weight[edge_mask.numpy()], dtype=torch.float)
 
         node_idx = node_idx.clone()
