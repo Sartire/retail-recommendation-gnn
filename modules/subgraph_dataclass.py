@@ -138,7 +138,8 @@ class LinkSubgraphDataset(Dataset):
 
         src_history = torch.tensor(np.concatenate([[src], [dst], edge_history_df['user_idx'].to_numpy()]), dtype=torch.long)
         dst_history = torch.tensor(np.concatenate([[src], [dst], edge_history_df['item_idx'].to_numpy()]), dtype=torch.long)
-        edge_history = to_undirected(torch.stack([src_history, dst_history], dim=0))
+        edge_history, edge_weights = to_undirected(torch.stack([src_history, dst_history], dim=0),
+                                     edge_attr=torch.tensor(edge_history_df['weight'].to_numpy(), dtype=torch.float))
 
         # extract enclosing subgraph
         
@@ -151,11 +152,8 @@ class LinkSubgraphDataset(Dataset):
                                                                             directed=False)
         
         #print(edge_mask)
-        print(edge_history.shape)
-        print(edge_mask.shape)
-        print(edge_history_df.shape)
-        print(sub_edge_index.shape)
-        sub_edge_weights = torch.tensor(edge_history_df.weight[edge_mask.numpy()], dtype=torch.float)
+        
+        sub_edge_weights = edge_weights[edge_mask]
 
         node_idx = node_idx.clone()
         sub_edge_index = sub_edge_index.clone()
