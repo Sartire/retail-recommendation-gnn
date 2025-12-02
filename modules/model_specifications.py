@@ -28,7 +28,8 @@ class BaselineGCNSubgraphEncoder(nn.Module):
     def forward(self, x, edge_index, edge_weight,  batch):
         h = x
         for conv in self.convs:
-            h = conv(h, edge_index, edge_weight)
+            #h = conv(h, edge_index, edge_weight)
+            h = conv(h, edge_index)
             h = torch.relu(h)
         hg = global_mean_pool(h, batch)
         logit = self.mlp(hg).view(-1)
@@ -52,7 +53,8 @@ class GATOnlySubgraphEncoder(nn.Module):
     def forward(self, x, edge_index, edge_weights, batch):
         h = x
         for conv in self.convs:
-            h = conv(h, edge_index, edge_weights)
+            #h = conv(h, edge_index, edge_weights)
+            h = conv(h, edge_index)
             h = torch.relu(h)
         hg = global_mean_pool(h, batch)
         logit = self.mlp(hg).view(-1)
@@ -88,7 +90,8 @@ class PGADRLSubgraphEncoder(nn.Module):
         gcn_x = x
         gcn_embeddings = []
         for conv in self.gcn_convs:
-            gcn_x = conv(gcn_x, edge_index, edge_weights)
+            #gcn_x = conv(gcn_x, edge_index, edge_weights)
+            gcn_x = conv(gcn_x, edge_index)
             gcn_x = torch.relu(gcn_x)
             gcn_x =global_mean_pool(gcn_x, batch)
             gcn_embeddings.append(gcn_x)
@@ -96,7 +99,8 @@ class PGADRLSubgraphEncoder(nn.Module):
         gat_x = x
         gat_embeddings = []
         for conv in self.gat_convs:
-            gat_x = conv(gat_x, edge_index, edge_weights)
+            #gat_x = conv(gat_x, edge_index, edge_weights)
+            gat_x = conv(gat_x, edge_index)
             gat_x =  torch.relu(gat_x)
             gat_x = global_mean_pool(gat_x, batch)
             gat_embeddings.append(gat_x)
