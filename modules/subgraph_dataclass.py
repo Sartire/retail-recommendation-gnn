@@ -112,10 +112,10 @@ class LinkSubgraphDataset(Dataset):
 
         labels = 1 + dist_min + dist_sum_half * (dist_sum_half + 1)
 
-        #u_pos_t = torch.tensor(u_pos, dtype=torch.long)
-        #v_pos_t = torch.tensor(v_pos, dtype=torch.long)
-        #labels[u_pos_t] = 1
-        #labels[v_pos_t] = 1
+        u_pos_t = torch.tensor(u_pos, dtype=torch.long)
+        v_pos_t = torch.tensor(v_pos, dtype=torch.long)
+        labels[u_pos_t] = 1
+        labels[v_pos_t] = 1
 
         return labels
     

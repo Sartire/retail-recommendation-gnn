@@ -24,7 +24,7 @@ old_umask =os.umask(0o007)
 # SETUP -------------------------------------------------------
 ## configurations
 BATCH_SIZE = 10
-in_channels = 1  
+in_channels = 2  
 num_epochs = 2
 num_layers = 2
 num_heads = 4

@@ -93,7 +93,7 @@ args = parser.parse_args()
 
 if __name__ == "__main__":
     
-
+    start_time = time()
     
     num_workers = args.num_workers
     base_data_dir = Path(args.base_cache_dir)
@@ -242,4 +242,4 @@ if __name__ == "__main__":
         print(f"Path: {path.as_posix()} | size: {format_bytes(total_size)} | time: {ctime()}")
 
     print(f'Finished checking disk usage: {ctime()}')
-
+    print(f'Finished all tasks in {(time() - start_time)/60} minutes')
