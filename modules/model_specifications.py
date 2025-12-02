@@ -86,7 +86,7 @@ class PGADRLSubgraphEncoder(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_channels, 1)
         )
-        # Layer weights for progressive fusion
+        # Layer weights for progressive fusion from paper
         self.layer_weights = nn.Parameter(torch.ones(num_layers + 1))
 
     def forward(self, x, edge_index, edge_weights, batch):
@@ -96,7 +96,7 @@ class PGADRLSubgraphEncoder(nn.Module):
             gcn_x = conv(gcn_x, edge_index, edge_weights)
             #gcn_x = conv(gcn_x, edge_index)
             gcn_x = torch.relu(gcn_x)
-            gcn_x =global_mean_pool(gcn_x, batch)
+            #gcn_x =global_mean_pool(gcn_x, batch)
             gcn_embeddings.append(gcn_x)
 
         gat_x = x
@@ -105,17 +105,20 @@ class PGADRLSubgraphEncoder(nn.Module):
             gat_x = conv(gat_x, edge_index, edge_weights)
             #gat_x = conv(gat_x, edge_index)
             gat_x =  torch.relu(gat_x)
-            gat_x = global_mean_pool(gat_x, batch)
+            #gat_x = global_mean_pool(gat_x, batch)
             gat_embeddings.append(gat_x)
 
 
-        gcn_stack = torch.stack(gcn_embeddings, dim=1)
-        gat_stack = torch.stack(gat_embeddings, dim=1)
-
-        layer_weights = F.softmax(self.layer_weights, dim=0)
-        fused_embeddings = torch.sum((gcn_stack + gat_stack) * layer_weights.view(1, -1, 1), dim=1)
+        # version from PGA paper
+        #gcn_stack = torch.stack(gcn_embeddings, dim=1)
+        #gat_stack = torch.stack(gat_embeddings, dim=1)
+        #
+        #layer_weights = F.softmax(self.layer_weights, dim=0)
+        #fused_embeddings = torch.sum((gcn_stack + gat_stack) * layer_weights.view(1, -1, 1), dim=1)
 
         # fuse the embeddings 
-        #h = torch.cat([gcn_pool, gat_pool], dim=-1)
-        logit = self.mlp(fused_embeddings).view(-1)
+        gcn_pool = global_mean_pool(gcn_x, batch)
+        gat_pool = global_mean_pool(gat_x, batch)
+        h = torch.cat([gcn_pool, gat_pool], dim=-1)
+        logit = self.mlp(h).view(-1)
         return logit

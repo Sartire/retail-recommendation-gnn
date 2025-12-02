@@ -178,7 +178,7 @@ for version in data_versions:
 
     ## train models 1 at a time to reduce GPU usage
     ## GCN ----------------------
-
+    '''
     gcn_model = BaselineGCNSubgraphEncoder(in_channels=in_channels, hidden_channels=hidden_dim, num_layers=num_layers).to(device)
     gcn_opt = torch.optim.Adam(gcn_model.parameters(), lr=1e-3)
 
@@ -215,7 +215,7 @@ for version in data_versions:
     del gat_opt
     del params
     torch.cuda.empty_cache() 
-
+    '''
     ### PGA -----------------------
 
     pga_model = PGADRLSubgraphEncoder(in_channels=in_channels,
@@ -235,7 +235,9 @@ for version in data_versions:
     torch.cuda.empty_cache()
 
 
-    results[version] = pd.concat([gcn_performance, gat_performance, pga_performance], axis=0)
+    results[version] = pd.concat([#gcn_performance,
+                                  #gat_performance,
+                                pga_performance], axis=0)
     version_end = time()
     print(f"Finished {version} in {(version_end - version_start)/60} minutes")
 
