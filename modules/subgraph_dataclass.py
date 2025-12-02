@@ -139,7 +139,8 @@ class LinkSubgraphDataset(Dataset):
         src_history = torch.tensor(np.concatenate([[src], [dst], edge_history_df['user_idx'].to_numpy()]), dtype=torch.long)
         dst_history = torch.tensor(np.concatenate([[src], [dst], edge_history_df['item_idx'].to_numpy()]), dtype=torch.long)
         edge_history, edge_weights = to_undirected(torch.stack([src_history, dst_history], dim=0),
-                                     edge_attr=torch.tensor(edge_history_df['weight'].to_numpy(), dtype=torch.float))
+                                                   edge_attr=torch.tensor(np.concatenate([[0,0],edge_history_df['weight'].to_numpy()]),
+                                                                           dtype=torch.float))
 
         # extract enclosing subgraph
         
