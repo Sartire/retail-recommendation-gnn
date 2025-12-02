@@ -150,7 +150,8 @@ class LinkSubgraphDataset(Dataset):
                                                                             relabel_nodes=True,
                                                                             directed=False)
         
-        print(edge_mask)
+        #print(edge_mask)
+        print(edge_history.shape)
         print(edge_mask.shape)
         print(edge_history_df.shape)
         print(sub_edge_index.shape)
