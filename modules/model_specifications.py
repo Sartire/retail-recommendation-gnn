@@ -27,9 +27,12 @@ class BaselineGCNSubgraphEncoder(nn.Module):
 
     def forward(self, x, edge_index, edge_weight,  batch):
         h = x
+        print(h.shape)
+        print(edge_index.shape)
         for conv in self.convs:
             #h = conv(h, edge_index, edge_weight)
             h = conv(h, edge_index)
+            print(h.shape)
             h = torch.relu(h)
         hg = global_mean_pool(h, batch)
         logit = self.mlp(hg).view(-1)
