@@ -23,7 +23,7 @@ old_umask =os.umask(0o007)
 
 # SETUP -------------------------------------------------------
 ## configurations
-BATCH_SIZE = 10
+BATCH_SIZE = 60
 in_channels = 2  
 num_epochs = 10
 num_layers = 2
@@ -247,8 +247,8 @@ for version in data_versions:
     torch.cuda.empty_cache()
 
 
-    results[version] = pd.concat([#gcn_performance,
-                                  #gat_performance,
+    results[version] = pd.concat([gcn_performance,
+                                  gat_performance,
                                 pga_performance], axis=0)
     version_end = time()
     print(f"Finished {version} in {(version_end - version_start)/60} minutes")
