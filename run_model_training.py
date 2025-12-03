@@ -23,7 +23,7 @@ old_umask =os.umask(0o007)
 
 # SETUP -------------------------------------------------------
 ## configurations
-BATCH_SIZE = 60
+BATCH_SIZE = 30
 in_channels = 2  
 num_epochs = 10
 num_layers = 2
@@ -191,6 +191,7 @@ for version in data_versions:
 
     gcn_performance = train_model_for_epochs(gcn_model, gcn_opt, sched, train_loader, test_loader, num_epochs, name='GCN')
     gcn_performance['model'] = 'GCN'
+    gcn_performance['version'] = version
     
     
     
@@ -198,6 +199,7 @@ for version in data_versions:
 
     params = gcn_model.state_dict()
     torch.save(params, param_dir / 'gcn_model.pt')
+    gcn_performance.to_csv(param_dir / 'gcn_performance.csv')
     del gcn_model
     del gcn_opt
     del params
@@ -216,10 +218,12 @@ for version in data_versions:
     print("Training GAT")
     gat_performance = train_model_for_epochs(gat_model, gat_opt, sched, train_loader, test_loader, num_epochs, name='GAT')
     gat_performance['model'] = 'GAT'
+    gat_performance['version'] = version
 
     # clean up to reduce GPU memory usage
     params = gat_model.state_dict()
     torch.save(params, param_dir /'gat_model.pt')
+    gat_performance.to_csv(param_dir / 'gat_performance.csv')
     del gat_model
     del gat_opt
     del sched
@@ -236,10 +240,12 @@ for version in data_versions:
     print("Training PGA")
     pga_performance = train_model_for_epochs(pga_model, pga_opt, sched, train_loader, test_loader, num_epochs, name='PGA')
     pga_performance['model'] = 'PGA'
+    pga_performance['version'] = version
 
     # clean up to reduce GPU memory usage
     params = pga_model.state_dict()
     torch.save(params, param_dir/'pga_model.pt')
+    pga_performance.to_csv(param_dir/'pga_performance.csv')
     del pga_model
     del pga_opt
     del sched
