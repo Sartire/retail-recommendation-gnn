@@ -7,7 +7,7 @@ module load apptainer/1.3.4
 module load python/3.11.4
 module load pytorch/2.7.0
 
-export LD_LIBRARY_PATH=/home/mcg4aw/.local/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
 
 echo "Module setup complete"
 

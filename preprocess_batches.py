@@ -11,33 +11,16 @@ from collections import defaultdict
 import ray
 import os
 import json
-
-
+import warnings
+warnings.filterwarnings("ignore")
 
 
 project_root = os.path.dirname(os.path.abspath(__file__))
 #modules_path = os.path.join(project_root, "modules")
 sys.path.insert(0, project_root)
-
-
-
-
-import warnings
-warnings.filterwarnings("ignore")
-
-if not __name__ == "__main__":
-    print("loaded libraries for worker process?")
-
-
-
-
 from modules.subgraph_dataclass import LinkSubgraphDataset
 from modules.retail_data_prep import preprocess_events, create_graph_features
 from modules.data_splitting import get_split_subset
-
-
-
-
 
 # display bytes in logs so we see how much data is written
 def format_bytes(size):
@@ -52,11 +35,6 @@ def format_bytes(size):
 def preprocess_single_item(idx, dataset, cache_dir):
     """Helper function for parallel preprocessing"""
     
-    #print(f"Type of dataset_ref: {type(dataset_ref)}")
-    #print(f"Value of dataset_ref: {dataset_ref}")
-    #assert isinstance(dataset_ref, ray.ObjectRef), "Lost the ObjectRef!"
-
-    #dataset = ray.get(dataset_ref)
     
     # Get preprocessed item
     item = dataset[idx]
@@ -78,7 +56,7 @@ parser = argparse.ArgumentParser(
     description='''Preprocess retail rocket data in parallel.
     \nWrites the processed data to disk in cache directories.
     \nCaches are cleared if they already exist.
-    \nCaches are in /scratch/mcg4aw/retail_data''',
+    \nCaches each split described in data_splits.json''',
 )
 
 parser.add_argument('-n','--num_workers', type=int, default=cpu_count(), help='Number of workers for parallel processing')
@@ -115,7 +93,6 @@ if __name__ == "__main__":
     )
 
     # set umask for the created data
-
     old_mask = os.umask(0o007)
 
     # specifications for number of hops and how to split the data
@@ -123,10 +100,7 @@ if __name__ == "__main__":
         specs = json.load(f)
         f.close()
     
-
-
     print(f'Loading data: {ctime()}')
-
 
     events = preprocess_events(min_user_interactions = min_user_interactions, min_item_interactions = min_item_interactions, limit = limit)
 
@@ -180,12 +154,12 @@ if __name__ == "__main__":
 
             dataset_ref = ray.put(dataset)
 
-            print(f"Type of dataset: {type(dataset)}")
-            print(f"Type of dataset_ref: {type(dataset_ref)}")
-            print(f"Is dataset_ref an ObjectRef? {isinstance(dataset_ref, ray.ObjectRef)}")
-            assert isinstance(dataset_ref, ray.ObjectRef), f"Expected ObjectRef, got {type(dataset_ref)}"
+            #print(f"Type of dataset: {type(dataset)}")
+            #print(f"Type of dataset_ref: {type(dataset_ref)}")
+            #print(f"Is dataset_ref an ObjectRef? {isinstance(dataset_ref, ray.ObjectRef)}")
+            #assert isinstance(dataset_ref, ray.ObjectRef), f"Expected ObjectRef, got {type(dataset_ref)}"
 
-            # Try to verify it's in the object store
+            # Verify the ref is in the object store
             try:
                 test_get = ray.get(dataset_ref)
                 print(f"Successfully retrieved from object store, type: {type(test_get)}")
@@ -225,7 +199,7 @@ if __name__ == "__main__":
 
 
             end = time()
-            print(f'Finished parallel caching for {split} in {end - start} seconds: {ctime()}')
+            print(f'Finished parallel caching for {split} in {end - start} seconds.')
 
             visited_paths.add(cache_dir)
 

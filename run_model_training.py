@@ -16,12 +16,13 @@ from time import time, ctime
 import os
 
 
-cache_data_dir = '/scratch/mcg4aw/retail_data'
-output_dir = '/scratch/mcg4aw/retail_output'
 
 old_umask =os.umask(0o007)
 
 # SETUP -------------------------------------------------------
+## Set the data and output directories
+cache_data_dir = '/scratch/mcg4aw/retail_data'
+output_dir = '/scratch/mcg4aw/retail_output'
 ## configurations
 BATCH_SIZE = 30
 in_channels = 2  
